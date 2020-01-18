@@ -6,7 +6,20 @@
 
     <groupId>com.lunaticf</groupId>
     <artifactId>cola</artifactId>
+    <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>1.8</java.version>
+    </properties>
 
+    <modules>
+        <module>cola-core</module>
+        <module>cola-example</module>
+        <module>cola-benchmark</module>
+        <module>cola-benchmark</module>
+        <module>cola-spring-boot-starter</module>
+    </modules>
 </project>

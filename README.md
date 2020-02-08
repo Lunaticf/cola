@@ -10,15 +10,27 @@ Simple: easy to learn, easy to develop, easy to integrate and easy to deploy
 
 ### Serialization
 - Support multiple protocol such as JDK, hessian, JSON(fastjson), kyro.
-- 
+- Support thread executor like ThreadPoolExecutor, disruptor.
+- Supports advanced features like load-balance(random, Round-Robin), HA strategy(Failfast, Failover).
+- Supports service discovery services like ZooKeeper or Consul.
+- Supports oneway, synchronous or asynchronous invoking.
+- Supports SPI extension.
+- Easy integrated with Spring Framework 4.x.
+
+### Requirements
+The minimum requirements to run the quick start are:
+* JDK 1.8 or above
 
 
+### Quick Start
+
+### Reference
+https://gitee.com/huangyong/rpc
+https://github.com/luxiaoxun/NettyRpc
+https://github.com/pyloque/rpckids
 
 
-
-
-
-#### serialization 数据序列化层
+#### cola.serialization 数据序列化层
 序列化就是将Java对象转化为字节的过程，然后就能传输和保存了。其实转化为JSON字符串或者是用其他的形式保存也是序列化，
 总的来说只是将一个事物转化为另一种表示形式，然后能够复原。
 
@@ -54,10 +66,20 @@ http://dubbo.apache.org/zh-cn/docs/user/perf-test.html
 - protocol 远程调用层：封装 RPC 调用，以 Invocation, Result 为中心，扩展接口为 Protocol, Invoker, Exporter
 - exchange 信息交换层：封装请求响应模式，同步转异步，以 Request, Response 为中心，扩展接口为 Exchanger, ExchangeChannel, ExchangeClient, ExchangeServer
 - transport 网络传输层：抽象 mina 和 netty 为统一接口，以 Message 为中心，扩展接口为 Channel, Transporter, Client, Server, Codec
-- serialization 数据序列化层：可复用的一些工具，扩展接口为 Serialization, ObjectInput, ObjectOutput, ThreadPool
+- cola.serialization 数据序列化层：可复用的一些工具，扩展接口为 Serialization, ObjectInput, ObjectOutput, ThreadPool
 
 
 
 
 
 
+docker run --privileged=true -d --name zookeeper --publish 2181:2181  -d zookeeper:latest
+docker exec -it 338838f5fb66 /bin/bash
+./zkcli.sh
+ls
+
+https://blog.csdn.net/qq_20641565/article/details/78797975
+https://www.shadowwu.club/2018/10/23/reflect_int/index.html
+
+暂时只支持包装类型
+后续通过cglib生成异步代理类

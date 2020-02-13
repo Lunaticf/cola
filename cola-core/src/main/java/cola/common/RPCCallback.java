@@ -5,6 +5,6 @@ package cola.common;
  * 回调函数
  */
 @FunctionalInterface
-public interface RpcCallback {
-    void invoke(RpcResponse response);
+public interface RPCCallback {
+    void invoke(RPCResponse response);
 }

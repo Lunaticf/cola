@@ -37,7 +37,7 @@ public class ConnectManager {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(group)
                     .channel(NioSocketChannel.class)
-                    .handler(new RpcChannelInitializer(serializer))
+                    .handler(new RPCChannelInitializer(serializer))
                     .option(ChannelOption.SO_KEEPALIVE, true);
 
             channel = bootstrap.connect(inetSocketAddress.getHostName(), inetSocketAddress.getPort()).sync()

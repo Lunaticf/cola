@@ -1,13 +1,13 @@
 package cola.transport.netty.server;
 
-import cola.common.RpcRequest;
-import cola.common.RpcResponse;
+import cola.common.RPCRequest;
+import cola.common.RPCResponse;
 import cola.executor.TaskExecutor;
 import cola.registry.ServiceRegistry;
 import cola.serialization.Serializer;
-import cola.transport.netty.codec.RpcDecoder;
-import cola.transport.netty.codec.RpcEncoder;
-import cola.transport.netty.server.handler.RpcRequestHandler;
+import cola.transport.netty.codec.RPCDecoder;
+import cola.transport.netty.codec.RPCEncoder;
+import cola.transport.netty.server.handler.RPCRequestHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * NIO RPC 服务器
  */
 @Slf4j
-public class RpcServer {
+public class RPCServer {
     /**
      * 服务器地址
      */
@@ -56,7 +56,7 @@ public class RpcServer {
     /**
      * Constructor
      */
-    public RpcServer(String serverAddress, ServiceRegistry serviceRegistry, Serializer serializer, TaskExecutor taskExecutor) {
+    public RPCServer(String serverAddress, ServiceRegistry serviceRegistry, Serializer serializer, TaskExecutor taskExecutor) {
         this.serverAddress = serverAddress;
         this.serviceRegistry = serviceRegistry;
         this.serializer = serializer;
@@ -83,9 +83,9 @@ public class RpcServer {
                             // TCP的粘包处理Handler
                             // 消息编解码时开始4个字节表示消息的长度
                             ch.pipeline()
-                                    .addLast(new RpcDecoder(RpcRequest.class, serializer))
-                                    .addLast(new RpcEncoder(RpcResponse.class, serializer))
-                                    .addLast(new RpcRequestHandler(handlerMap, RpcServer.this));
+                                    .addLast(new RPCDecoder(RPCRequest.class, serializer))
+                                    .addLast(new RPCEncoder(RPCResponse.class, serializer))
+                                    .addLast(new RPCRequestHandler(handlerMap, RPCServer.this));
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 1024)
@@ -118,7 +118,7 @@ public class RpcServer {
     /**
      * 提交RPC请求任务到线程池去完成任务
      */
-    public void handleRpcExecute(Runnable runnable) {
+    public void handleRPCExecute(Runnable runnable) {
         taskExecutor.submit(runnable);
     }
 

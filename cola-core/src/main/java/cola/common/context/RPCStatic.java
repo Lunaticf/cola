@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author lcf
  * 每收到一个请求，活跃数加1，完成请求后则将活跃数减1。
  */
-public class RpcStatic {
+public class RPCStatic {
     private static final Map<String, Integer> ACTIVE_COUNT = new ConcurrentHashMap<>();
 
     public synchronized static int getCount(String interfaceName, String methodName, String address) {

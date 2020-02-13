@@ -1,8 +1,8 @@
 package cola.cluster.loadbalancer;
 
 import cola.cluster.LoadBalancer;
-import cola.common.RpcRequest;
-import cola.common.context.RpcStatic;
+import cola.common.RPCRequest;
+import cola.common.context.RPCStatic;
 
 import java.util.List;
 
@@ -12,11 +12,11 @@ import java.util.List;
  */
 public class LeastActiveLoadBalancer implements LoadBalancer {
     @Override
-    public String select(List<String> endPoints, RpcRequest request) {
+    public String select(List<String> endPoints, RPCRequest request) {
         String endpoint = null;
         int least = 0;
         for (String candidate : endPoints) {
-            int current = RpcStatic.getCount(request.getInterfaceName(), request.getMethodName(), candidate);
+            int current = RPCStatic.getCount(request.getInterfaceName(), request.getMethodName(), candidate);
             if (endpoint == null || current < least) {
                 endpoint = candidate;
                 least = current;

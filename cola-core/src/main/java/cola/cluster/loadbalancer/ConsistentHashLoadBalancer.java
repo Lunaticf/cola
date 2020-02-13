@@ -1,7 +1,7 @@
 package cola.cluster.loadbalancer;
 
 import cola.cluster.LoadBalancer;
-import cola.common.RpcRequest;
+import cola.common.RPCRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -27,7 +27,7 @@ public class ConsistentHashLoadBalancer implements LoadBalancer {
     private final SortedMap<Integer, String> circle = new TreeMap<>();
 
     @Override
-    public String select(List<String> endPoints, RpcRequest request) {
+    public String select(List<String> endPoints, RPCRequest request) {
         // 如果跟缓存的列表不一样了 就重新计算哈希环
         if (cachedEndpoints == null || !cachedEndpoints.containsAll(endPoints)) {
             buildCircle(endPoints);

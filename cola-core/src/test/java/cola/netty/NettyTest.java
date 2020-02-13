@@ -1,6 +1,6 @@
 package cola.netty;
 
-import cola.transport.netty.client.RpcChannelInitializer;
+import cola.transport.netty.client.RPCChannelInitializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;

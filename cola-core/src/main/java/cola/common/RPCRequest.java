@@ -12,7 +12,7 @@ import java.util.Arrays;
  */
 @Data
 @Builder
-public class RpcRequest implements Serializable {
+public class RPCRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String requestId;

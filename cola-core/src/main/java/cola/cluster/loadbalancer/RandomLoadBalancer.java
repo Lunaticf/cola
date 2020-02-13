@@ -1,7 +1,7 @@
 package cola.cluster.loadbalancer;
 
 import cola.cluster.LoadBalancer;
-import cola.common.RpcRequest;
+import cola.common.RPCRequest;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -12,7 +12,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class RandomLoadBalancer implements LoadBalancer {
     @Override
-    public String select(List<String> endpoints, RpcRequest request) {
+    public String select(List<String> endpoints, RPCRequest request) {
         if (endpoints.isEmpty()) {
             return null;
         }

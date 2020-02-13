@@ -9,12 +9,12 @@ import io.netty.handler.codec.MessageToByteEncoder;
 /**
  * @author lcf
  */
-public class RpcEncoder extends MessageToByteEncoder {
+public class RPCEncoder extends MessageToByteEncoder {
 
     private Class<?> genericClass;
     private Serializer serializer;
 
-    public RpcEncoder(Class<?> genericClass, Serializer serializer) {
+    public RPCEncoder(Class<?> genericClass, Serializer serializer) {
         this.genericClass = genericClass;
         this.serializer = serializer;
     }

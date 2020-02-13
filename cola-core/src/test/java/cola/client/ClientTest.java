@@ -3,16 +3,16 @@ package cola.client;
 import cola.cluster.LoadBalancer;
 import cola.cluster.loadbalancer.RandomLoadBalancer;
 import cola.common.HelloService;
-import cola.common.RpcCallback;
-import cola.common.RpcFuture;
-import cola.common.RpcResponse;
-import cola.common.context.RpcContext;
+import cola.common.RPCCallback;
+import cola.common.RPCFuture;
+import cola.common.RPCResponse;
+import cola.common.context.RPCContext;
 import cola.common.enumeration.InvokeType;
 import cola.registry.ServiceRegistry;
 import cola.registry.zookeeper.ZkServiceRegistry;
 import cola.serialization.Serializer;
 import cola.serialization.jdk.JdkSerializer;
-import cola.transport.netty.client.RpcClient;
+import cola.transport.netty.client.RPCClient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,7 +29,7 @@ public class ClientTest {
     ServiceRegistry serviceRegistry;
     Serializer serializer;
     LoadBalancer loadBalancer;
-    RpcClient rpcClient;
+    RPCClient rpcClient;
 
     @Before
     public void before() {
@@ -37,7 +37,7 @@ public class ClientTest {
         serviceRegistry = new ZkServiceRegistry("127.0.0.1:2181");
         serializer = new JdkSerializer();
         loadBalancer = new RandomLoadBalancer();
-        rpcClient = new RpcClient(serializer, serviceRegistry, loadBalancer);
+        rpcClient = new RPCClient(serializer, serviceRegistry, loadBalancer);
     }
 
     @Test
@@ -51,7 +51,7 @@ public class ClientTest {
     public void testAsync() throws ExecutionException, InterruptedException {
         HelloService helloService = rpcClient.create(HelloService.class, InvokeType.AYSNC);
         helloService.hello("lcf");
-        Future future = RpcContext.getContext().getFuture();
+        Future future = RPCContext.getContext().getFuture();
 
 
         Assert.assertEquals("hello! lcf",future.get());
@@ -61,7 +61,7 @@ public class ClientTest {
     public void testCallback() throws ExecutionException, InterruptedException {
         HelloService helloService = rpcClient.create(HelloService.class, InvokeType.AYSNC);
         helloService.hello("lcf");
-        RpcFuture rpcFuture = RpcContext.getContext().getFuture();
+        RPCFuture rpcFuture = RPCContext.getContext().getFuture();
         rpcFuture.addCallback((response)->{
             if (response.hasError()) {
                 System.out.println("请求错误");

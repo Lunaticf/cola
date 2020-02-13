@@ -2,10 +2,10 @@ package cola.transport.netty.client;
 
 import cola.cluster.LoadBalancer;
 import cola.cluster.loadbalancer.LeastActiveLoadBalancer;
-import cola.common.RpcFuture;
-import cola.common.RpcRequest;
-import cola.common.context.RpcContext;
-import cola.common.context.RpcStatic;
+import cola.common.RPCFuture;
+import cola.common.RPCRequest;
+import cola.common.context.RPCContext;
+import cola.common.context.RPCStatic;
 import cola.common.enumeration.InvokeType;
 import cola.filter.AbstractAfterFilter;
 import cola.filter.AbstractBeforeFilter;
@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author lcf
  */
 @Slf4j
-public class RpcClient {
+public class RPCClient {
 
     private ServiceRegistry serviceRegistry;
 
@@ -50,7 +50,7 @@ public class RpcClient {
         }
     });
 
-    public RpcClient(Serializer serializer, ServiceRegistry serviceRegistry, LoadBalancer loadBalancer) {
+    public RPCClient(Serializer serializer, ServiceRegistry serviceRegistry, LoadBalancer loadBalancer) {
         this.serviceRegistry = serviceRegistry;
         this.loadBalancer = loadBalancer;
         this.connectManager = new ConnectManager(serializer);
@@ -75,8 +75,8 @@ public class RpcClient {
         return (T) Proxy.newProxyInstance(serviceInterface.getClassLoader(),
                 new Class<?>[]{serviceInterface}, (proxy, method, args) -> {
 
-                    // 创建并初始化Rpc请求
-                    RpcRequest request = RpcRequest.builder()
+                    // 创建并初始化RPC请求
+                    RPCRequest request = RPCRequest.builder()
                             .requestId(UUID.randomUUID().toString())
                             .interfaceName(method.getDeclaringClass().getName())
                             .methodName(method.getName())
@@ -105,20 +105,20 @@ public class RpcClient {
 
                     // oneway sync async
                     if (invokeType == InvokeType.ONEWAY) {
-                        RpcContext.getContext().setFuture(null);
+                        RPCContext.getContext().setFuture(null);
                         sendRequest(channel, request);
                         return null;
                     } else if (invokeType == InvokeType.SYNC) {
-                        RpcFuture rpcFuture = new RpcFuture(request);
-                        RpcContext.getContext().setFuture(rpcFuture);
-                        RpcFutureManager.getInstance().registerFuture(rpcFuture);
+                        RPCFuture rpcFuture = new RPCFuture(request);
+                        RPCContext.getContext().setFuture(rpcFuture);
+                        RPCFutureManager.getInstance().registerFuture(rpcFuture);
                         sendRequest(channel, request);
                         // 同步调用 马上就调用get堵塞
                         return rpcFuture.get();
                     } else {
-                        RpcFuture rpcFuture = new RpcFuture(request);
-                        RpcContext.getContext().setFuture(rpcFuture);
-                        RpcFutureManager.getInstance().registerFuture(rpcFuture);
+                        RPCFuture rpcFuture = new RPCFuture(request);
+                        RPCContext.getContext().setFuture(rpcFuture);
+                        RPCFutureManager.getInstance().registerFuture(rpcFuture);
                         sendRequest(channel, request);
                         // 异步调用
                         return null;
@@ -128,8 +128,8 @@ public class RpcClient {
 
 
 
-    private void sendRequest(Channel channel, RpcRequest request) throws InterruptedException {
-        log.debug("开始发送Rpc请求");
+    private void sendRequest(Channel channel, RPCRequest request) throws InterruptedException {
+        log.debug("开始发送RPC请求");
         CountDownLatch latch = new CountDownLatch(1);
 
         channel.writeAndFlush(request).addListener(
@@ -141,7 +141,7 @@ public class RpcClient {
 
         // 活跃计数
         if (loadBalancer instanceof LeastActiveLoadBalancer) {
-            RpcStatic.incCount(request.getInterfaceName(), request.getMethodName(), socketAddress.getAddress() + ":" + socketAddress.getPort());
+            RPCStatic.incCount(request.getInterfaceName(), request.getMethodName(), socketAddress.getAddress() + ":" + socketAddress.getPort());
         }
 
         log.debug("发送成功 {}", request);

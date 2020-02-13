@@ -1,6 +1,6 @@
 package cola.cluster;
 
-import cola.common.RpcRequest;
+import cola.common.RPCRequest;
 
 import java.util.List;
 
@@ -9,5 +9,5 @@ import java.util.List;
  * 负载均衡
  */
 public interface LoadBalancer {
-    String select(List<String> endPoints, RpcRequest request);
+    String select(List<String> endPoints, RPCRequest request);
 }

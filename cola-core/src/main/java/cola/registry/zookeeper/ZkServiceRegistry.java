@@ -2,7 +2,7 @@ package cola.registry.zookeeper;
 
 import cola.registry.ServiceRegistry;
 import cola.transport.netty.client.ConnectManager;
-import cola.transport.netty.client.RpcClient;
+import cola.transport.netty.client.RPCClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;

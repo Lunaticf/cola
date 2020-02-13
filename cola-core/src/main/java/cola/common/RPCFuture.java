@@ -1,6 +1,6 @@
 package cola.common;
 
-import cola.transport.netty.client.RpcClient;
+import cola.transport.netty.client.RPCClient;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
@@ -14,20 +14,20 @@ import java.util.concurrent.*;
  */
 @Slf4j
 @Data
-public class RpcFuture implements Future<Object> {
+public class RPCFuture implements Future<Object> {
 
-    private RpcRequest request;
-    private RpcResponse response;
+    private RPCRequest request;
+    private RPCResponse response;
 
     CountDownLatch latch = new CountDownLatch(1);
 
     /**
      *  存放所有callback
      */
-    private List<RpcCallback> pendingCallbacks = new ArrayList<RpcCallback>();
+    private List<RPCCallback> pendingCallbacks = new ArrayList<RPCCallback>();
 
 
-    public RpcFuture(RpcRequest request) {
+    public RPCFuture(RPCRequest request) {
         this.request = request;
     }
 
@@ -62,7 +62,7 @@ public class RpcFuture implements Future<Object> {
     /**
      *  存放响应结果
      */
-    public void done(RpcResponse response) {
+    public void done(RPCResponse response) {
         this.response = response;
         latch.countDown();
 
@@ -74,7 +74,7 @@ public class RpcFuture implements Future<Object> {
      * 调用callback
      */
     private void invokeCallbacks() {
-        for (final RpcCallback callback : pendingCallbacks) {
+        for (final RPCCallback callback : pendingCallbacks) {
             runCallback(callback);
         }
     }
@@ -82,9 +82,9 @@ public class RpcFuture implements Future<Object> {
     /**
      * 执行回调函数
      */
-    private void runCallback(final RpcCallback callback) {
-        final RpcResponse res = this.response;
-        RpcClient.submit(() -> {
+    private void runCallback(final RPCCallback callback) {
+        final RPCResponse res = this.response;
+        RPCClient.submit(() -> {
 
             // 执行回调
             callback.invoke(res);
@@ -94,7 +94,7 @@ public class RpcFuture implements Future<Object> {
     /**
      * 添加 callback
      */
-    public RpcFuture addCallback(RpcCallback callback) {
+    public RPCFuture addCallback(RPCCallback callback) {
         // 如果添加的时候已经有响应了 直接运行
         if (isDone()) {
             runCallback(callback);

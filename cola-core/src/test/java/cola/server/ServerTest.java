@@ -9,7 +9,7 @@ import cola.registry.zookeeper.ZkServiceRegistry;
 import cola.serialization.Serializer;
 import cola.serialization.hessian.HessianSerializer;
 import cola.serialization.jdk.JdkSerializer;
-import cola.transport.netty.server.RpcServer;
+import cola.transport.netty.server.RPCServer;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -24,7 +24,7 @@ public class ServerTest {
         Serializer serializer = new JdkSerializer();
         TaskExecutor taskExecutor = new ThreadPoolTaskExecutor(10);
 
-        RpcServer rpcServer = new RpcServer(serverAddress, serviceRegistry, serializer, taskExecutor);
+        RPCServer rpcServer = new RPCServer(serverAddress, serviceRegistry, serializer, taskExecutor);
         HelloService helloService = new HelloServiceImpl();
 
 

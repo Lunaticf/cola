@@ -1,8 +1,8 @@
 package cola.transport.netty.server.handler;
 
-import cola.common.RpcRequest;
-import cola.common.RpcResponse;
-import cola.transport.netty.server.RpcServer;
+import cola.common.RPCRequest;
+import cola.common.RPCResponse;
+import cola.transport.netty.server.RPCServer;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -16,32 +16,32 @@ import java.util.Map;
  * RPC请求handler
  */
 @Slf4j
-public class RpcRequestHandler extends SimpleChannelInboundHandler<RpcRequest> {
+public class RPCRequestHandler extends SimpleChannelInboundHandler<RPCRequest> {
 
     private Map<String, Object> handlerMap;
 
-    private RpcServer server;
+    private RPCServer server;
 
-    public RpcRequestHandler(Map<String, Object> handlerMap, RpcServer rpcServer) {
+    public RPCRequestHandler(Map<String, Object> handlerMap, RPCServer rpcServer) {
         this.handlerMap = handlerMap;
         this.server = rpcServer;
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, RpcRequest request) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, RPCRequest request) throws Exception {
         // 丢到线程池执行
-        server.handleRpcExecute(() -> {
+        server.handleRPCExecute(() -> {
             log.debug("Get request:{} ", request.getRequestId());
 
             // 生成response
-            RpcResponse response = new RpcResponse();
+            RPCResponse response = new RPCResponse();
             response.setRequestId(request.getRequestId());
             try {
                 Object result = handle(request);
                 response.setResult(result);
             } catch (Exception e) {
                 response.setError(e);
-                log.error("Rpc request handle error! {}", e.getMessage());
+                log.error("RPC request handle error! {}", e.getMessage());
             }
 
             // 写回响应
@@ -54,7 +54,7 @@ public class RpcRequestHandler extends SimpleChannelInboundHandler<RpcRequest> {
     /**
      * 找到rpc请求对应的服务对象 执行方法
      */
-    private Object handle(RpcRequest request) throws Exception {
+    private Object handle(RPCRequest request) throws Exception {
         // 解析请求
         String      serviceName = request.getInterfaceName();
         String      methodName = request.getMethodName();

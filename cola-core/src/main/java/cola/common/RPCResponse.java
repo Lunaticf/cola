@@ -8,7 +8,7 @@ import java.io.Serializable;
  * @author lcf
  */
 @Data
-public class RpcResponse implements Serializable {
+public class RPCResponse implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String requestId;

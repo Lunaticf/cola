@@ -1,7 +1,7 @@
 package cola.cluster.loadbalancer;
 
 import cola.cluster.LoadBalancer;
-import cola.common.RpcRequest;
+import cola.common.RPCRequest;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ public class RoundRobinLoadBalancer implements LoadBalancer {
     private int index = 0;
 
     @Override
-    public String select(List<String> endPoints, RpcRequest request) {
+    public String select(List<String> endPoints, RPCRequest request) {
         if (endPoints.isEmpty()) {
             return null;
         }

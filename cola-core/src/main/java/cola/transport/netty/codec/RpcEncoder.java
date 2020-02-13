@@ -10,15 +10,21 @@ import io.netty.handler.codec.MessageToByteEncoder;
  * @author lcf
  */
 public class RpcEncoder extends MessageToByteEncoder {
+
+    private Class<?> genericClass;
     private Serializer serializer;
 
-    public RpcEncoder(Serializer serializer) {
+    public RpcEncoder(Class<?> genericClass, Serializer serializer) {
+        this.genericClass = genericClass;
         this.serializer = serializer;
     }
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
-        out.writeInt(Constant.LENGTH_FIELD_LENGTH);
-        out.writeBytes(serializer.serialize(msg));
+        if (genericClass.isInstance(msg)) {
+            byte[] data = serializer.serialize(msg);
+            out.writeInt(data.length);
+            out.writeBytes(data);
+        }
     }
 }

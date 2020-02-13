@@ -7,15 +7,12 @@ Grab a cola and drink it, out of the box.
 Simple: easy to learn, easy to develop, easy to integrate and easy to deploy
 
 ## Features
-
-### Serialization
 - Support multiple protocol such as JDK, hessian, JSON(fastjson), kyro.
 - Support thread executor like ThreadPoolExecutor, disruptor.
-- Supports advanced features like load-balance(random, Round-Robin), HA strategy(Failfast, Failover).
-- Supports service discovery services like ZooKeeper or Consul.
-- Supports oneway, synchronous or asynchronous invoking.
-- Supports SPI extension.
-- Easy integrated with Spring Framework 4.x.
+- Support advanced features like load-balance(random, Round-Robin), HA strategy(Failfast, Failover).
+- Support service discovery services like ZooKeeper or Consul.
+- Support synchronous or asynchronous invoking and callback.
+- Easy integrated with Spring boot starter
 
 ### Requirements
 The minimum requirements to run the quick start are:
@@ -83,3 +80,7 @@ https://www.shadowwu.club/2018/10/23/reflect_int/index.html
 
 暂时只支持包装类型
 后续通过cglib生成异步代理类
+
+
+轻量级 不使用Spring做依赖
+

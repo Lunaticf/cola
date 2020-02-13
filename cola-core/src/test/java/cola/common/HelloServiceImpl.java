@@ -1,12 +1,8 @@
-package server;
-
-import cola.common.RpcService;
-import common.HelloService;
+package cola.common;
 
 /**
  * @author lcf
  */
-@RpcService(HelloService.class)
 public class HelloServiceImpl implements HelloService {
     @Override
     public String hello(String name) {

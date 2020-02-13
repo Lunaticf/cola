@@ -1,34 +1,30 @@
 package cola.common;
 
 import cola.transport.netty.client.RpcClient;
+import cola.transport.netty.constant.Constant;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.AbstractQueuedSynchronizer;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.*;
 
 /**
  * @author lcf
  * 异步调用返回结果 Future只是一个接口
+ * 可能会有多个线程操作 要用锁
  */
 @Slf4j
+@Data
 public class RpcFuture implements Future<Object> {
 
-    private Sync sync;
     private RpcRequest request;
     private RpcResponse response;
 
-    private long startTime;
+    private int timeout;
 
-    /**
-     * 请求阈值时间
-     */
-    private long responseTimeThreshold = 5000;
+    CountDownLatch latch = new CountDownLatch(1);
 
     /**
      *  存放所有callback
@@ -36,54 +32,43 @@ public class RpcFuture implements Future<Object> {
     private List<RpcCallback> pendingCallbacks = new ArrayList<RpcCallback>();
 
 
-    public RpcFuture(RpcRequest request) {
-        this.sync = new Sync();
+    public RpcFuture(RpcRequest request, int timeout) {
         this.request = request;
-        this.startTime = System.currentTimeMillis();
+        this.timeout = timeout;
     }
 
-    @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isCancelled() {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public boolean isDone() {
-        return sync.isDone();
+        return latch.getCount() == 0;
     }
 
     @Override
-    public Object get() throws InterruptedException, ExecutionException {
-        sync.acquire(-1);
-
-        // 如果已经有响应了
-        if (this.response != null) {
-            return this.response.getResult();
-        } else {
-            return null;
+    public Object get() throws ExecutionException {
+        int timeout = 0;
+        if (this.timeout != 0) {
+            // 同步调用 默认超时1s
+            timeout = this.timeout;
         }
+        try {
+            return get(timeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            log.error(e.getMessage());
+        }
+        return null;
     }
 
     @Override
-    public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        // 尝试自旋时间
-        boolean success = sync.tryAcquireNanos(-1, unit.toNanos(timeout));
-        if (success) {
-            if (this.response != null) {
-                return this.response.getResult();
-            } else {
-                return null;
+    public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException {
+        try {
+            if (!latch.await(timeout, unit)) {
+                throw new ExecutionException(new TimeoutException("Rpc请求超时"));
             }
-        } else {
-            throw new RuntimeException("Timeout exception. Request id: " + this.request.getRequestId()
-                    + ". Request class name: " + this.request.getClassName()
-                    + ". Request method: " + this.request.getMethodName());
+        } catch (InterruptedException e) {
+            log.error(e.getMessage());
         }
+
+        return response.getResult();
     }
 
     /**
@@ -91,15 +76,10 @@ public class RpcFuture implements Future<Object> {
      */
     public void done(RpcResponse response) {
         this.response = response;
-        sync.release(1);
+        latch.countDown();
 
         // 可以调用callback
         invokeCallbacks();
-        // Threshold
-        long responseTime = System.currentTimeMillis() - startTime;
-        if (responseTime > this.responseTimeThreshold) {
-            log.warn("Service response time is too slow. Request id = " + response.getRequestId() + ". Response Time = " + responseTime + "ms");
-        }
     }
 
     /**
@@ -111,16 +91,15 @@ public class RpcFuture implements Future<Object> {
         }
     }
 
+    /**
+     * 执行回调函数
+     */
     private void runCallback(final RpcCallback callback) {
         final RpcResponse res = this.response;
         RpcClient.submit(() -> {
 
-            // 根据错误执行不同回调
-            if (!res.isError()) {
-                callback.success(res.getResult());
-            } else {
-                callback.fail(new RuntimeException("Response error", new Throwable(res.getError())));
-            }
+            // 执行回调
+            callback.invoke(res);
         });
     }
 
@@ -137,29 +116,13 @@ public class RpcFuture implements Future<Object> {
         return this;
     }
 
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        throw new UnsupportedOperationException();
+    }
 
-    static class Sync extends AbstractQueuedSynchronizer {
-
-        @Override
-        protected boolean tryAcquire(int arg) {
-            return getState() == 1;
-        }
-
-        @Override
-        protected boolean tryRelease(int arg) {
-            if (getState() == 0) {
-                if (compareAndSetState(0, 1)) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return true;
-            }
-        }
-
-        public boolean isDone() {
-            return getState() == 1;
-        }
+    @Override
+    public boolean isCancelled() {
+        throw new UnsupportedOperationException();
     }
 }

@@ -1,11 +1,13 @@
 package cola.cluster.loadbalancer;
 
+import cola.cluster.LoadBalancer;
+
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author lcf
+ * 随机负载均衡
  */
 public class RandomLoadBalancer extends LoadBalancer {
     @Override

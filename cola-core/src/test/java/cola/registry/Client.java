@@ -8,14 +8,10 @@ import cola.registry.zookeeper.ZkServiceRegistry;
 public class Client {
     public static void main(String[] args) throws InterruptedException {
         ZkServiceRegistry registry = new ZkServiceRegistry("127.0.0.1:2181");
-        registry.init();
-
 
         for (int i = 0; i < 100; i++) {
             System.out.println(registry.discover("com.cola.HelloService"));
             Thread.sleep(2000);
         }
     }
-
-
 }

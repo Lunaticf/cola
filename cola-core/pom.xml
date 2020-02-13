@@ -56,19 +56,6 @@
             <version>4.1.22.Final</version>
         </dependency>
 
-        <!--spring-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>4.3.7.RELEASE</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <version>4.3.7.RELEASE</version>
-            <scope>test</scope>
-        </dependency>
-
         <!--ZooKeeper-->
         <dependency>
             <groupId>org.apache.zookeeper</groupId>

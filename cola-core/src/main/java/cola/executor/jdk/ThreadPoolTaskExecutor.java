@@ -8,10 +8,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author lcf
  */
-public class TaskExecutorImpl implements TaskExecutor {
+public class ThreadPoolTaskExecutor implements TaskExecutor {
     private ExecutorService executorService;
 
-    public TaskExecutorImpl(int threads) {
+    public ThreadPoolTaskExecutor(int threads) {
         executorService = new ThreadPoolExecutor(
                 threads,
                 threads,
@@ -27,10 +27,6 @@ public class TaskExecutorImpl implements TaskExecutor {
                 },
                 new ThreadPoolExecutor.CallerRunsPolicy()
         );
-    }
-
-    @Override
-    public void init(int threads) {
     }
 
     @Override

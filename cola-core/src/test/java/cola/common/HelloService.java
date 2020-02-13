@@ -1,4 +1,4 @@
-package common;
+package cola.common;
 
 /**
  * @author lcf

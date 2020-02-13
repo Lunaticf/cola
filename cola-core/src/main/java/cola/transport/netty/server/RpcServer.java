@@ -1,28 +1,22 @@
 package cola.transport.netty.server;
 
-import cola.common.RpcService;
+import cola.common.RpcRequest;
+import cola.common.RpcResponse;
 import cola.executor.TaskExecutor;
 import cola.registry.ServiceRegistry;
 import cola.serialization.Serializer;
 import cola.transport.netty.codec.RpcDecoder;
 import cola.transport.netty.codec.RpcEncoder;
+import cola.transport.netty.server.handler.RpcRequestHandler;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -30,7 +24,7 @@ import java.util.Map;
  * NIO RPC 服务器
  */
 @Slf4j
-public class RpcServer implements ApplicationContextAware, InitializingBean{
+public class RpcServer {
     /**
      * 服务器地址
      */
@@ -42,11 +36,6 @@ public class RpcServer implements ApplicationContextAware, InitializingBean{
     private ServiceRegistry serviceRegistry;
 
     /**
-     * 存放接口名和服务对象的映射关系
-     */
-    private Map<String, Object> handlerMap = new HashMap<>();
-
-    /**
      *  序列化器
      */
     private Serializer serializer;
@@ -56,39 +45,22 @@ public class RpcServer implements ApplicationContextAware, InitializingBean{
      */
     private TaskExecutor taskExecutor;
 
-    public RpcServer(String serverAddress, ServiceRegistry serviceRegistry, TaskExecutor taskExecutor) {
-        this.serverAddress = serverAddress;
-        this.serviceRegistry = serviceRegistry;
-        this.taskExecutor = taskExecutor;
-    }
-
-    public RpcServer(String serverAddress) {
-        this.serverAddress = serverAddress;
-    }
+    /**
+     * 存放接口名和服务对象的映射关系 HelloService -> helloServiceImpl实例
+     */
+    private Map<String, Object> handlerMap = new ConcurrentHashMap<>();
 
     private EventLoopGroup bossGroup = null;
     private EventLoopGroup workerGroup = null;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        Map<String, Object> services = applicationContext.getBeansWithAnnotation(RpcService.class);
-        if (!services.isEmpty()) {
-            // 对于每个服务bean 注册到handlerMap 并且注册到注册中心
-            for (Object service : services.values()) {
-                // 因为可能被rpcService标注的类实现多个接口，所以我们获取真正的服务接口
-                String name = service.getClass().getAnnotation(RpcService.class).value().getName();
-                log.info("扫描并注册服务", name);
-                handlerMap.put(name, service);
-
-                // 注册到注册中心
-                serviceRegistry.registry(name, serverAddress);
-            }
-        }
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        start();
+    /**
+     * Constructor
+     */
+    public RpcServer(String serverAddress, ServiceRegistry serviceRegistry, Serializer serializer, TaskExecutor taskExecutor) {
+        this.serverAddress = serverAddress;
+        this.serviceRegistry = serviceRegistry;
+        this.serializer = serializer;
+        this.taskExecutor = taskExecutor;
     }
 
     /**
@@ -99,22 +71,24 @@ public class RpcServer implements ApplicationContextAware, InitializingBean{
             bossGroup = new NioEventLoopGroup();
             workerGroup = new NioEventLoopGroup();
 
+            log.info("服务器开始启动");
+
             // netty样板代码
             ServerBootstrap bootstrap = new ServerBootstrap();
-            bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
+            bootstrap.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             // TCP的粘包处理Handler
                             // 消息编解码时开始4个字节表示消息的长度
                             ch.pipeline()
-                                    .addLast(new LengthFieldBasedFrameDecoder(65536, 0, 4, 0, 0))
-                                    .addLast(new RpcDecoder(serializer))
-                                    .addLast(new RpcEncoder(serializer))
-                                    .addLast(new RpcHandler(handlerMap, RpcServer.this));
+                                    .addLast(new RpcDecoder(RpcRequest.class, serializer))
+                                    .addLast(new RpcEncoder(RpcResponse.class, serializer))
+                                    .addLast(new RpcRequestHandler(handlerMap, RpcServer.this));
                         }
                     })
-                    .option(ChannelOption.SO_BACKLOG, 128)
+                    .option(ChannelOption.SO_BACKLOG, 1024)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             // 解析设置的服务器启动地址
@@ -123,14 +97,26 @@ public class RpcServer implements ApplicationContextAware, InitializingBean{
             int port = Integer.parseInt(parts[1]);
 
             ChannelFuture future = bootstrap.bind(host, port).sync();
+
             log.info("服务器启动在{}端口", port);
 
-//            future.channel().closeFuture().sync();
+            future.channel().closeFuture().sync();
         }
     }
 
     /**
-     * 提交任务到线程池
+     * 注册服务
+     */
+    public void registerService(String service, Object serviceBean) {
+        handlerMap.put(service, serviceBean);
+
+        // 注册到注册中心
+        serviceRegistry.registry(service, serverAddress);
+        log.info("注册服务: {} 地址: {}", service, serverAddress);
+    }
+
+    /**
+     * 提交RPC请求任务到线程池去完成任务
      */
     public void handleRpcExecute(Runnable runnable) {
         taskExecutor.submit(runnable);
@@ -146,5 +132,6 @@ public class RpcServer implements ApplicationContextAware, InitializingBean{
         if (workerGroup != null) {
             workerGroup.shutdownGracefully();
         }
+        log.info("服务器关闭");
     }
 }

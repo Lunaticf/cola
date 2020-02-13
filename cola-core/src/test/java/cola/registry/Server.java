@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Server {
     public static void main(String[] args) throws InterruptedException {
         ZkServiceRegistry registry = new ZkServiceRegistry("127.0.0.1:2181");
-        registry.init();
 
         ExecutorService executorService = Executors.newCachedThreadPool();
 

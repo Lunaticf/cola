@@ -2,16 +2,20 @@ package cola.common;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * @author lcf
  */
 @Data
-public class RpcResponse {
+public class RpcResponse implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String requestId;
-    private String error;
+    private Exception error;
     private Object result;
 
-    public boolean isError() {
+    public boolean hasError() {
         return error != null;
     }
 }

@@ -2,6 +2,7 @@ package cola.registry.zookeeper;
 
 import cola.registry.ServiceRegistry;
 import cola.transport.netty.client.ConnectManager;
+import cola.transport.netty.client.RpcClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author lcf
@@ -33,29 +35,14 @@ public class ZkServiceRegistry implements ServiceRegistry {
      */
     private ConcurrentHashMap<String, List<String>> addressCache = new ConcurrentHashMap<>();
 
-    /**
-     * 记录是否已经监听某个service
-     */
-    private ConcurrentHashMap<String, Boolean> listener = new ConcurrentHashMap<>();
-
-
     public ZkServiceRegistry(String registryAddress) {
         this.registryAddress = registryAddress;
-    }
-
-    @PostConstruct
-    @Override
-    public void init() {
-        // 初始化ZooKeeper连接
-        if (registryAddress == null) {
-            throw new RuntimeException("ZooKeeper初始化连接地址为空");
-        }
         connectServer();
-        if (zooKeeper != null) {
-            log.info("connect to ZooKeeper");
-        }
     }
 
+    /**
+     * 连接ZooKeeper
+     */
     private void connectServer() {
         try {
             CountDownLatch latch = new CountDownLatch(1);
@@ -66,24 +53,30 @@ public class ZkServiceRegistry implements ServiceRegistry {
                     latch.countDown();
                 }
             });
-            latch.await();
+
+            // 10s连接不上报错
+            boolean status = latch.await(1, TimeUnit.SECONDS);
+            if (!status) {
+                log.error("连接ZooKeeper失败");
+            }
         } catch (IOException | InterruptedException e) {
-            log.error("连接ZooKeeper失败");
+            log.error("连接ZooKeeper失败, {}", e);
         }
     }
 
+    /**
+     * 获取服务
+     */
     @Override
     public List<String> discover(String service) {
         // 已经监听 直接从本地缓存获取
-        if (listener.containsKey(service)) {
+        if (addressCache.containsKey(service)) {
             log.info("从本地缓存获取服务地址");
             return addressCache.get(service);
         }
 
         // 从ZooKeeper获取 并且设置监听
         watchNode(service, ZkSupport.genServicePath(service));
-        log.info("监听服务", service);
-        listener.put(service, true);
         return addressCache.get(service);
     }
 
@@ -98,21 +91,20 @@ public class ZkServiceRegistry implements ServiceRegistry {
                 }
             });
             addressCache.put(service, addresses);
-            updateConnectedServer(service, addresses);
         } catch (InterruptedException | KeeperException e) {
             e.printStackTrace();
         }
     }
 
-    private void updateConnectedServer(String service, List<String> addresses) {
-        ConnectManager.getInstance().updateConnectedServer(service, addresses);
-    }
-
+    /**
+     *
+     */
     @Override
     public void registry(String service, String address) {
         String path = ZkSupport.generatePath(service, address);
         try {
             ZkSupport.createNode(zooKeeper, path);
+            System.out.println("dwqdw");
         } catch (KeeperException | InterruptedException e) {
             log.error("创建znode失败", path);
         }

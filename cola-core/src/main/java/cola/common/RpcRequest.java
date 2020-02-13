@@ -1,19 +1,25 @@
 package cola.common;
 
+import lombok.Builder;
 import lombok.Data;
+
+import java.io.Serializable;
 
 /**
  * @author lcf
  * rpc请求
  */
 @Data
-public class RpcRequest {
+@Builder
+public class RpcRequest implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String requestId;
 
     /**
      * 调用哪个服务的哪个方法
      */
-    private String className;
+    private String interfaceName;
     private String methodName;
 
     /**

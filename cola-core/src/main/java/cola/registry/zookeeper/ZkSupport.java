@@ -4,24 +4,24 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
-import org.springframework.util.StringUtils;
+
 
 /**
  * @author lcf
  * Zk工具类
  */
-public class ZkSupport {
+class ZkSupport {
 
-    public static final int ZK_SESSION_TIMEOUT = 5000;
+    static final int ZK_SESSION_TIMEOUT = 20000;
 
     private static String ZK_REGISTRY_PATH = "/cola";
     private static String ZK_PROVIDER_PATH = "/provider";
-    private String ZK_CONSUMER_PATH = "/consumer";
+    private static String ZK_CONSUMER_PATH = "/consumer";
 
     /**
      *  根据服务名和地址组装znode path
      */
-    public static String generatePath(String service, String address) {
+    static String generatePath(String service, String address) {
         return ZK_REGISTRY_PATH + "/" + service + ZK_PROVIDER_PATH + "/" + address;
     }
 
@@ -29,12 +29,12 @@ public class ZkSupport {
      * 创建一个临时znode
      * 如果路径不存在 层层创建
      */
-    public static void createNode(ZooKeeper zooKeeper, String path) throws KeeperException, InterruptedException {
+    static void createNode(ZooKeeper zooKeeper, String path) throws KeeperException, InterruptedException {
         String[] paths = path.split("/");
         StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < paths.length; i++) {
-            if (StringUtils.hasText(paths[i])) {
+            if (!"".equals(paths[i])) {
                 sb.append("/").append(paths[i]);
                 if (zooKeeper.exists(sb.toString(), false) == null) {
                     if (i != paths.length - 1) {
@@ -52,8 +52,7 @@ public class ZkSupport {
     /**
      * com.cola.HelloService -> /cola/com.cola.HelloService/provider
      */
-    public static String genServicePath(String service) {
+    static String genServicePath(String service) {
         return ZK_REGISTRY_PATH + "/" + service + ZK_PROVIDER_PATH;
     }
-
 }

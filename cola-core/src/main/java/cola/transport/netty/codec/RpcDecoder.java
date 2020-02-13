@@ -1,10 +1,11 @@
 package cola.transport.netty.codec;
 
-import cola.common.RpcRequest;
 import cola.serialization.Serializer;
+import cola.transport.netty.constant.Constant;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.util.ReferenceCountUtil;
 
 import java.util.List;
 
@@ -13,18 +14,19 @@ import java.util.List;
  */
 public class RpcDecoder extends ByteToMessageDecoder {
 
-    private static final int LENGTH_FIELD_LENGTH = 4;
-
+    private Class<?> genericClass;
     private Serializer serializer;
 
-    public RpcDecoder(Serializer serializer) {
+    public RpcDecoder(Class<?> genericClass, Serializer serializer) {
+        this.genericClass = genericClass;
         this.serializer = serializer;
     }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+
         // 前4个字节是长度 check数据长度
-        if (in.readableBytes() < LENGTH_FIELD_LENGTH) {
+        if (in.readableBytes() < Constant.LENGTH_FIELD_LENGTH) {
             return;
         }
 
@@ -43,7 +45,8 @@ public class RpcDecoder extends ByteToMessageDecoder {
         in.readBytes(data);
 
         // 把二进制反序列化
-        RpcRequest rpcRequest = serializer.deserialize(data, RpcRequest.class);
-        out.add(rpcRequest);
+        Object obj = serializer.deserialize(data, genericClass);
+        ReferenceCountUtil.retain(obj);
+        out.add(obj);
     }
 }

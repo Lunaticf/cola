@@ -40,7 +40,7 @@ public class ConnectManager {
                     .handler(new RpcChannelInitializer(serializer))
                     .option(ChannelOption.SO_KEEPALIVE, true);
 
-            channel = bootstrap.connect("localhost", 18866).sync()
+            channel = bootstrap.connect(inetSocketAddress.getHostName(), inetSocketAddress.getPort()).sync()
                     .channel();
 
             System.out.println(channel);

@@ -2,6 +2,7 @@ package cola.transport.netty.client;
 
 import cola.common.RpcFuture;
 import cola.common.RpcResponse;
+import cola.filter.FilterManager;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,6 +29,11 @@ public class RpcFutureManager {
     }
 
     public void futureDone(RpcResponse response) {
-        rpcFutureMap.remove(response.getRequestId()).done(response);
+        RpcFuture rpcFuture = rpcFutureMap.remove(response.getRequestId());
+        rpcFuture.done(response);
+    }
+
+    public RpcFuture getFuture(String requestId) {
+        return rpcFutureMap.get(requestId);
     }
 }

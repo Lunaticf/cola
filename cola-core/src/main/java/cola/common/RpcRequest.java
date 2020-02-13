@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * @author lcf
@@ -27,4 +28,14 @@ public class RpcRequest implements Serializable {
      */
     private Class<?>[] parameterTypes;
     private Object[] parameters;
+
+    public String key() {
+        return interfaceName +
+                "." +
+                methodName +
+                "." +
+                Arrays.toString(parameterTypes) +
+                "." +
+                Arrays.toString(parameters);
+    }
 }

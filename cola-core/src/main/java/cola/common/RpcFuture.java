@@ -1,11 +1,8 @@
 package cola.common;
 
 import cola.transport.netty.client.RpcClient;
-import cola.transport.netty.constant.Constant;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -22,8 +19,6 @@ public class RpcFuture implements Future<Object> {
     private RpcRequest request;
     private RpcResponse response;
 
-    private int timeout;
-
     CountDownLatch latch = new CountDownLatch(1);
 
     /**
@@ -32,9 +27,8 @@ public class RpcFuture implements Future<Object> {
     private List<RpcCallback> pendingCallbacks = new ArrayList<RpcCallback>();
 
 
-    public RpcFuture(RpcRequest request, int timeout) {
+    public RpcFuture(RpcRequest request) {
         this.request = request;
-        this.timeout = timeout;
     }
 
 
@@ -44,30 +38,24 @@ public class RpcFuture implements Future<Object> {
     }
 
     @Override
-    public Object get() throws ExecutionException {
-        int timeout = 0;
-        if (this.timeout != 0) {
-            // 同步调用 默认超时1s
-            timeout = this.timeout;
-        }
+    public Object get() throws InterruptedException, ExecutionException {
         try {
-            return get(timeout, TimeUnit.MILLISECONDS);
+            latch.await();
         } catch (InterruptedException e) {
             log.error(e.getMessage());
         }
-        return null;
+        return response.getResult();
     }
 
     @Override
-    public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException {
+    public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         try {
             if (!latch.await(timeout, unit)) {
-                throw new ExecutionException(new TimeoutException("Rpc请求超时"));
+                throw new TimeoutException("RPC Request timeout!");
             }
         } catch (InterruptedException e) {
             log.error(e.getMessage());
         }
-
         return response.getResult();
     }
 

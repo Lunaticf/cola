@@ -26,24 +26,18 @@ public class ZkServiceRegistry implements ServiceRegistry {
     private ZooKeeper zooKeeper;
 
     /**
-     * ZooKeeper的ip
-     */
-    private String registryAddress;
-
-    /**
      * 本地缓存
      */
     private ConcurrentHashMap<String, List<String>> addressCache = new ConcurrentHashMap<>();
 
     public ZkServiceRegistry(String registryAddress) {
-        this.registryAddress = registryAddress;
-        connectServer();
+        connectServer(registryAddress);
     }
 
     /**
      * 连接ZooKeeper
      */
-    private void connectServer() {
+    private void connectServer(String registryAddress) {
         try {
             CountDownLatch latch = new CountDownLatch(1);
             // 这里是异步的 所以要用latch
@@ -76,7 +70,7 @@ public class ZkServiceRegistry implements ServiceRegistry {
         }
 
         // 从ZooKeeper获取 并且设置监听
-        watchNode(service, ZkSupport.genServicePath(service));
+        watchNode(service, genServicePath(service));
         return addressCache.get(service);
     }
 
@@ -101,23 +95,11 @@ public class ZkServiceRegistry implements ServiceRegistry {
      */
     @Override
     public void registry(String service, String address) {
-        String path = ZkSupport.generatePath(service, address);
+        String path = generatePath(service, address);
         try {
             ZkSupport.createNode(zooKeeper, path);
-            System.out.println("dwqdw");
         } catch (KeeperException | InterruptedException e) {
             log.error("创建znode失败", path);
-        }
-    }
-
-    @Override
-    public void stop() {
-        if (zooKeeper != null) {
-            try {
-                zooKeeper.close();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
 }

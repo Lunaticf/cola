@@ -12,18 +12,8 @@ import org.apache.zookeeper.ZooKeeper;
  */
 class ZkSupport {
 
-    static final int ZK_SESSION_TIMEOUT = 20000;
+    static final int ZK_SESSION_TIMEOUT = 5000;
 
-    private static String ZK_REGISTRY_PATH = "/cola";
-    private static String ZK_PROVIDER_PATH = "/provider";
-    private static String ZK_CONSUMER_PATH = "/consumer";
-
-    /**
-     *  根据服务名和地址组装znode path
-     */
-    static String generatePath(String service, String address) {
-        return ZK_REGISTRY_PATH + "/" + service + ZK_PROVIDER_PATH + "/" + address;
-    }
 
     /**
      * 创建一个临时znode
@@ -47,12 +37,5 @@ class ZkSupport {
                 }
             }
         }
-    }
-
-    /**
-     * com.cola.HelloService -> /cola/com.cola.HelloService/provider
-     */
-    static String genServicePath(String service) {
-        return ZK_REGISTRY_PATH + "/" + service + ZK_PROVIDER_PATH;
     }
 }

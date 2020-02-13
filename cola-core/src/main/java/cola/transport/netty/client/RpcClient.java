@@ -1,11 +1,15 @@
 package cola.transport.netty.client;
 
 import cola.cluster.LoadBalancer;
+import cola.cluster.loadbalancer.LeastActiveLoadBalancer;
 import cola.common.RpcFuture;
 import cola.common.RpcRequest;
-import cola.common.RpcResponse;
 import cola.common.context.RpcContext;
+import cola.common.context.RpcStatic;
 import cola.common.enumeration.InvokeType;
+import cola.filter.AbstractAfterFilter;
+import cola.filter.AbstractBeforeFilter;
+import cola.filter.FilterManager;
 import cola.registry.ServiceRegistry;
 import cola.serialization.Serializer;
 import cola.util.StringUtil;
@@ -14,6 +18,7 @@ import io.netty.channel.ChannelFutureListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
@@ -30,6 +35,7 @@ public class RpcClient {
     private LoadBalancer loadBalancer;
 
     private ConnectManager connectManager;
+
 
     /**
      * 客户端线程池
@@ -55,10 +61,17 @@ public class RpcClient {
     }
 
     /**
+     * 默认同步调用
+     */
+    public <T> T create(Class<T> serviceInterface) {
+        return create(serviceInterface, InvokeType.SYNC);
+    }
+
+    /**
      * 创建代理对象
      */
     @SuppressWarnings("unchecked")
-    public <T> T create(Class<T> serviceInterface, InvokeType invokeType, int timeout) {
+    public <T> T create(Class<T> serviceInterface, InvokeType invokeType) {
         return (T) Proxy.newProxyInstance(serviceInterface.getClassLoader(),
                 new Class<?>[]{serviceInterface}, (proxy, method, args) -> {
 
@@ -76,10 +89,19 @@ public class RpcClient {
                     List<String> endPoints = serviceRegistry.discover(serviceName);
 
                     // 负载均衡获取一个地址
-                    String seleted = loadBalancer.select(endPoints);
+                    String selected = loadBalancer.select(endPoints, request);
+
+                    if (selected == null){
+                        throw new RuntimeException("对应服务不存在实例");
+                    }
 
                     // 获取连接
-                    Channel channel = connectManager.getChannel(StringUtil.str2socket(seleted));
+                    Channel channel = connectManager.getChannel(StringUtil.str2socket(selected));
+
+                    // before filter
+                    if (FilterManager.beforeFilter != null) {
+                        FilterManager.beforeFilter.invoke(request, selected);
+                    }
 
                     // oneway sync async
                     if (invokeType == InvokeType.ONEWAY) {
@@ -87,15 +109,17 @@ public class RpcClient {
                         sendRequest(channel, request);
                         return null;
                     } else if (invokeType == InvokeType.SYNC) {
-                        RpcFuture rpcFuture = new RpcFuture(request, timeout);
-                        RpcContext.getContext().setFuture(null);
+                        RpcFuture rpcFuture = new RpcFuture(request);
+                        RpcContext.getContext().setFuture(rpcFuture);
                         RpcFutureManager.getInstance().registerFuture(rpcFuture);
+                        sendRequest(channel, request);
                         // 同步调用 马上就调用get堵塞
                         return rpcFuture.get();
                     } else {
-                        RpcFuture rpcFuture = new RpcFuture(request, timeout);
+                        RpcFuture rpcFuture = new RpcFuture(request);
                         RpcContext.getContext().setFuture(rpcFuture);
                         RpcFutureManager.getInstance().registerFuture(rpcFuture);
+                        sendRequest(channel, request);
                         // 异步调用
                         return null;
                     }
@@ -105,6 +129,7 @@ public class RpcClient {
 
 
     private void sendRequest(Channel channel, RpcRequest request) throws InterruptedException {
+        log.debug("开始发送Rpc请求");
         CountDownLatch latch = new CountDownLatch(1);
 
         channel.writeAndFlush(request).addListener(
@@ -112,64 +137,22 @@ public class RpcClient {
         );
 
         latch.await();
+        InetSocketAddress socketAddress = (InetSocketAddress) channel.remoteAddress();
+
+        // 活跃计数
+        if (loadBalancer instanceof LeastActiveLoadBalancer) {
+            RpcStatic.incCount(request.getInterfaceName(), request.getMethodName(), socketAddress.getAddress() + ":" + socketAddress.getPort());
+        }
+
         log.debug("发送成功 {}", request);
     }
 
+    public void addBeforeFilter(AbstractBeforeFilter filter) {
+        FilterManager.addBeforeFilter(filter);
+    }
 
+    public void addAfterFilter(AbstractAfterFilter filter) {
+        FilterManager.addAfterFilter(filter);
+    }
 
-
-
-//    /**
-//     * 异步调用 返回RpcFuture
-//     */
-//    public <T> AsyncProxy createAsyn(Class<T> serviceInterface) {
-//        return new AsyncProxy<>(serviceInterface);
-//    }
-//
-//
-//    public class AsyncProxy<T> {
-//        private Class<T> service;
-//
-//        public AsyncProxy(Class<T> service) {
-//            this.service = service;
-//        }
-//
-//        public RpcFuture call(String methodName, Object... args) throws Exception {
-//            // 获取服务地址
-//            List<String> endPoints = serviceRegistry.discover(service.getName());
-//
-//            // 负载均衡获取一个地址
-//            String seleted = loadBalancer.select(endPoints);
-//
-//            // 获取连接
-//            Channel channel = connectManager.getChannel(StringUtil.str2socket(seleted));
-//
-//            RpcRequest request = createRequest(service.getName(), methodName, args);
-//
-//            RpcFuture rpcFuture = new RpcFuture(request);
-//            RpcFutureManager.getInstance().registerFuture(rpcFuture);
-//
-//            CountDownLatch latch = new CountDownLatch(1);
-//            channel.writeAndFlush(request).addListener(
-//                    (ChannelFutureListener) future -> latch.countDown()
-//            );
-//            return rpcFuture;
-//        }
-//
-//        private RpcRequest createRequest(String name, String methodName, Object[] args) {
-//            Class[] parameterTypes = new Class[args.length];
-//            for (int i = 0; i < args.length; i++) {
-//
-//                parameterTypes[i] = args[i].getClass();
-//            }
-//
-//            RpcRequest request = RpcRequest.builder()
-//                    .requestId(UUID.randomUUID().toString())
-//                    .interfaceName(name)
-//                    .methodName(name)
-//                    .parameters(args)
-//                    .parameterTypes(parameterTypes).build();
-//            return request;
-//        }
-//    }
 }

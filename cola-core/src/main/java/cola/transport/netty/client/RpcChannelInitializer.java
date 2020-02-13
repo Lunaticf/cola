@@ -30,6 +30,5 @@ public class RpcChannelInitializer extends ChannelInitializer<SocketChannel> {
         cp.addLast(new RpcEncoder(RpcRequest.class, serializer));
         cp.addLast(new RpcDecoder(RpcResponse.class, serializer));
         cp.addLast(new RpcResponseHandler());
-
     }
 }

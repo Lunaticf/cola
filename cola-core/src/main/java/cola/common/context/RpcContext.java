@@ -1,5 +1,7 @@
 package cola.common.context;
 
+import cola.common.RpcFuture;
+
 import java.util.concurrent.Future;
 
 /**
@@ -11,17 +13,17 @@ public class RpcContext {
 
     private RpcContext() {}
 
-    private Future future;
+    private RpcFuture future;
 
     public static RpcContext getContext() {
         return RPC_CONTEXT.get();
     }
 
-    public Future getFuture() {
+    public RpcFuture getFuture() {
         return future;
     }
 
-    public void setFuture(Future future) {
+    public void setFuture(RpcFuture future) {
         this.future = future;
     }
 }

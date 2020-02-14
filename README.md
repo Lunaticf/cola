@@ -4,7 +4,7 @@ A light rpc framework.
 Grab a cola and drink it, out of the box.
 (mainly due to a cats' name :),  variable naming is the hardest part aha)
 
-Simple: easy to learn, easy to develop, easy to integrate and easy to deploy
+Just for learning, the implementation is naive, refactoring.
 
 ## Features
 - Support multiple protocol such as JDK, Protostuff, hessian, JSON(fastjson), kyro.

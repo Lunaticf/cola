@@ -25,7 +25,6 @@ import java.util.concurrent.Future;
  */
 public class ClientTest {
 
-    String serverAddress;
     ServiceRegistry serviceRegistry;
     Serializer serializer;
     LoadBalancer loadBalancer;
@@ -33,7 +32,6 @@ public class ClientTest {
 
     @Before
     public void before() {
-        serverAddress = "localhost:18866";
         serviceRegistry = new ZkServiceRegistry("127.0.0.1:2181");
         serializer = new JdkSerializer();
         loadBalancer = new RandomLoadBalancer();

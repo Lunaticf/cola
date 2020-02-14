@@ -1,0 +1,5 @@
+cola:
+  register: 127.0.0.1:2181
+  serializer: hessian
+  server: 127.0.0.1:8888
+  threads: 10

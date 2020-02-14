@@ -22,6 +22,8 @@ The minimum requirements to run the quick start are:
 
 
 
+please refer to cola-example.
+
 
 
 

@@ -18,6 +18,7 @@
     <modules>
         <module>cola-core</module>
         <module>cola-spring-boot-starter</module>
+        <module>cola-example</module>
     </modules>
 
     <build>

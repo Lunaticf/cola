@@ -5,14 +5,15 @@ import cola.common.RPCResponse;
 import cola.executor.TaskExecutor;
 import cola.registry.ServiceRegistry;
 import cola.serialization.Serializer;
-import cola.transport.netty.codec.RPCDecoder;
-import cola.transport.netty.codec.RPCEncoder;
+import cola.codec.codec.RPCDecoder;
+import cola.codec.codec.RPCEncoder;
 import cola.transport.netty.server.handler.RPCRequestHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -24,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * NIO RPC 服务器
  */
 @Slf4j
+@NoArgsConstructor
 public class RPCServer {
     /**
      * 服务器地址

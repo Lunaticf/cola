@@ -15,6 +15,7 @@ import cola.serialization.Serializer;
 import cola.util.StringUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Proxy;
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author lcf
  */
 @Slf4j
+@NoArgsConstructor
 public class RPCClient {
 
     private ServiceRegistry serviceRegistry;
@@ -40,7 +42,7 @@ public class RPCClient {
     /**
      * 客户端线程池
      */
-    private static ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(16, 16,
+    private ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(16, 16,
             600L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(65536), new ThreadFactory() {
         private AtomicInteger atomicInteger = new AtomicInteger(0);
 
@@ -56,7 +58,7 @@ public class RPCClient {
         this.connectManager = new ConnectManager(serializer);
     }
 
-    public static void submit(Runnable task) {
+    public void submit(Runnable task) {
         threadPoolExecutor.submit(task);
     }
 
@@ -109,14 +111,14 @@ public class RPCClient {
                         sendRequest(channel, request);
                         return null;
                     } else if (invokeType == InvokeType.SYNC) {
-                        RPCFuture rpcFuture = new RPCFuture(request);
+                        RPCFuture rpcFuture = new RPCFuture(request, this);
                         RPCContext.getContext().setFuture(rpcFuture);
                         RPCFutureManager.getInstance().registerFuture(rpcFuture);
                         sendRequest(channel, request);
                         // 同步调用 马上就调用get堵塞
                         return rpcFuture.get();
                     } else {
-                        RPCFuture rpcFuture = new RPCFuture(request);
+                        RPCFuture rpcFuture = new RPCFuture(request, this);
                         RPCContext.getContext().setFuture(rpcFuture);
                         RPCFutureManager.getInstance().registerFuture(rpcFuture);
                         sendRequest(channel, request);

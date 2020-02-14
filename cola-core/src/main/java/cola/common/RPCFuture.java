@@ -16,6 +16,7 @@ import java.util.concurrent.*;
 @Data
 public class RPCFuture implements Future<Object> {
 
+    private final RPCClient rpcClient;
     private RPCRequest request;
     private RPCResponse response;
 
@@ -27,8 +28,9 @@ public class RPCFuture implements Future<Object> {
     private List<RPCCallback> pendingCallbacks = new ArrayList<RPCCallback>();
 
 
-    public RPCFuture(RPCRequest request) {
+    public RPCFuture(RPCRequest request, RPCClient rpcClient) {
         this.request = request;
+        this.rpcClient = rpcClient;
     }
 
 
@@ -84,7 +86,7 @@ public class RPCFuture implements Future<Object> {
      */
     private void runCallback(final RPCCallback callback) {
         final RPCResponse res = this.response;
-        RPCClient.submit(() -> {
+        rpcClient.submit(() -> {
 
             // 执行回调
             callback.invoke(res);

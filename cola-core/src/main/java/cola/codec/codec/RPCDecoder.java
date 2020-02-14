@@ -1,4 +1,4 @@
-package cola.transport.netty.codec;
+package cola.codec.codec;
 
 import cola.serialization.Serializer;
 import cola.transport.netty.constant.Constant;

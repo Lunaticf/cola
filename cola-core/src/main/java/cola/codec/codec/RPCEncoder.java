@@ -1,7 +1,6 @@
-package cola.transport.netty.codec;
+package cola.codec.codec;
 
 import cola.serialization.Serializer;
-import cola.transport.netty.constant.Constant;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;

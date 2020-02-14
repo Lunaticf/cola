@@ -1,6 +1,8 @@
 package cola.executor.jdk;
 
 import cola.executor.TaskExecutor;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -8,8 +10,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author lcf
  */
+@NoArgsConstructor
+@AllArgsConstructor
 public class ThreadPoolTaskExecutor implements TaskExecutor {
     private ExecutorService executorService;
+
+    private int threads;
 
     public ThreadPoolTaskExecutor(int threads) {
         executorService = new ThreadPoolExecutor(

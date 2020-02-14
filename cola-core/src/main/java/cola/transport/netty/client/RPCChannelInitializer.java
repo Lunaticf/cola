@@ -3,14 +3,11 @@ package cola.transport.netty.client;
 import cola.common.RPCRequest;
 import cola.common.RPCResponse;
 import cola.serialization.Serializer;
-import cola.transport.netty.codec.RPCDecoder;
-import cola.transport.netty.codec.RPCEncoder;
+import cola.codec.codec.RPCDecoder;
+import cola.codec.codec.RPCEncoder;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-
-import java.util.HashMap;
 
 /**
  * @author lcf

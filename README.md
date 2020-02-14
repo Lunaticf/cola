@@ -20,18 +20,88 @@ The minimum requirements to run the quick start are:
 
 ### Quick Start
 
-
-
-please refer to cola-example.
-
-
-
-
-
-
-
+#### ZooKeeper 
+start Zookeeper, docker example.
+```shell
 docker run --privileged=true -d --name zookeeper --publish 2181:2181  -d zookeeper:latest
-docker exec -it 338838f5fb66 /bin/bash
-./zkcli.sh
-ls
+```
+
+#### import dependency
+
+```
+<dependency>
+    <groupId>com.lunaticf</groupId>
+    <artifactId>cola-spring-boot-starter</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+```
+
+you can also use it without spring boot, see test for example.
+
+#### configuration
+```yml
+// client
+cola:
+  loadbalance: random
+  register: 127.0.0.1:2181
+  serializer: hessian
+
+// server
+cola:
+  register: 127.0.0.1:2181
+  serializer: hessian
+  server: 127.0.0.1:8888
+  threads: 10
+```
+
+#### define service
+```java
+public interface HelloService {
+    String hello(String name);
+}
+```
+
+#### server
+```java
+// impl
+@ColaService(HelloService.class)
+public class HelloServiceImpl implements HelloService {
+    @Override
+    public String hello(String name) {
+        return "hello ! " + name;
+    }
+}
+```
+
+#### client
+```java
+@ColaReference(invokeType = InvokeType.AYSNC)
+HelloService helloService;
+
+// invoke
+helloService.hello("lcf");
+RPCFuture future = RPCContext.getContext().getFuture();
+
+// add callback
+future.addCallback(response -> {
+ if (response.hasError()) {
+    System.out.println("请求发送失败");
+ } else {
+    System.out.println("请求发送成功");
+ }
+});
+
+System.out.println(future.get());
+```
+
+
+
+please refer to cola-example for detail.
+
+
+
+
+
+
+
 
